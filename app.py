@@ -8,15 +8,15 @@ def extract_claims_from_pdf(file):
     for page in doc:
         full_text += page.get_text()
 
-    # Look for start of claims section
+    # Find the "claims" section (case-insensitive)
     lower_text = full_text.lower()
     claims_start = lower_text.find("claims")
     if claims_start == -1:
         return "Could not find 'Claims' section."
 
     claims_text = full_text[claims_start:]
-    
-    # Clean up and try to split individual claims (basic pattern)
+
+    # Break text into lines and detect claims
     lines = claims_text.splitlines()
     claims = []
     current_claim = ""
@@ -25,7 +25,10 @@ def extract_claims_from_pdf(file):
         line = line.strip()
         if not line:
             continue
-        if line[0].isdigit() and (line[1:3] == ". " or line[1] == " "):  # e.g., "1. " or "1 "
+        # Make sure line is long enough before checking characters
+        if len(line) > 1 and line[0].isdigit() and (
+            line[1:3] == ". " or line[1] == " " or line[1] == "."
+        ):
             if current_claim:
                 claims.append(current_claim.strip())
             current_claim = line
