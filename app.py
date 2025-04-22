@@ -8,16 +8,19 @@ def extract_claims_from_pdf(file):
     for page in doc:
         full_text += page.get_text()
 
-    # Find the "claims" section (case-insensitive)
     lower_text = full_text.lower()
-    claims_start = lower_text.find("claims")
-    if claims_start == -1:
-        return "Could not find 'Claims' section."
 
-    claims_text = full_text[claims_start:]
+    # Try several known phrases that mark the true start of the claims section
+    for marker in ["what is claimed is:", "we claim:", "i claim:", "\nclaims\n"]:
+        index = lower_text.find(marker)
+        if index != -1:
+            full_text = full_text[index + len(marker):]
+            break
+    else:
+        return "Could not reliably find start of claims section."
 
-    # Break text into lines and detect claims
-    lines = claims_text.splitlines()
+    # Now parse the claims themselves from this point onward
+    lines = full_text.splitlines()
     claims = []
     current_claim = ""
 
@@ -25,7 +28,8 @@ def extract_claims_from_pdf(file):
         line = line.strip()
         if not line:
             continue
-        # Make sure line is long enough before checking characters
+
+        # Detect start of a new claim: starts with number and optional ". " or " "
         if len(line) > 1 and line[0].isdigit() and (
             line[1:3] == ". " or line[1] == " " or line[1] == "."
         ):
@@ -39,18 +43,3 @@ def extract_claims_from_pdf(file):
         claims.append(current_claim.strip())
 
     return claims
-
-st.title("Patent Claims Extractor (Part 1)")
-
-uploaded_file = st.file_uploader("Upload Patent PDF", type=["pdf"])
-
-if uploaded_file:
-    with st.spinner("Extracting claims..."):
-        claims = extract_claims_from_pdf(uploaded_file)
-
-        if isinstance(claims, str):
-            st.error(claims)
-        else:
-            st.success(f"Extracted {len(claims)} claims.")
-            for i, claim in enumerate(claims, 1):
-                st.markdown(f"**Claim {i}:** {claim}")
