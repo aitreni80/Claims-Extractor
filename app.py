@@ -6,7 +6,7 @@ def extract_claims_from_pdf(file):
     full_text = "\n".join([page.get_text() for page in doc])
 
     # Detect start of the claims section
-    claim_markers = ["what is claimed is:", "we claim:", "i claim:", "\nclaims\n", "\nClaims"]
+    claim_markers = ["what is claimed is:", "we claim:", "i claim:", "\nclaims\n", "Claims"]
     lower_text = full_text.lower()
 
     for marker in claim_markers:
